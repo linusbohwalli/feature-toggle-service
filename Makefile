@@ -30,6 +30,12 @@ build-gw-server: gen-gw
 	go build -o server/gw-server \
 	./gw-server/gw-server.go
 
+clean:
+	rm -r vendor
+	rm -r server
+	rm api/feature-toggle.pb.go
+	rm api/feature-toggle.pb.gw.go
+	rm api/feature-toggle.swagger.json
 
 build-all: gen-rpc gen-gw gen-swagger build-grpc-server build-gw-server
 
