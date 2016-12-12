@@ -2,8 +2,9 @@ package storage
 
 import (
 	"time"
-	"github.com/satori/go.uuid"
+
 	"github.com/peterrosell/feature-toggle-service/featuretree"
+	"github.com/satori/go.uuid"
 )
 
 type Filter map[string]string
@@ -46,11 +47,12 @@ type FeatureToggleStore interface {
 	DeleteProperty(name string) (*bool, error)
 	SearchProperty(name string) (*[]Property, error)
 
-
 	CreateToggleRule(toggleRule ToggleRule) (*string, error)
 	ReadToggleRule(id string) (*ToggleRule, error)
 	DeleteToggleRule(id string) (*bool, error)
 	SearchToggleRule(name *string, filter Filter) (*[]ToggleRule, error)
+
+	SetConfig(config Config)
 
 	Open() error
 	Close()
@@ -64,12 +66,12 @@ func NewProperty(name string, description string) *Property {
 	return &Property{name, description}
 }
 
-func NewToggleRule(featureId string, enabled bool, propArgs... string) *ToggleRule {
+func NewToggleRule(featureId string, enabled bool, propArgs ...string) *ToggleRule {
 	props := make(Properties)
 	for i := 0; i < len(propArgs); i += 2 {
-		props[propArgs[i]] = propArgs[i + 1]
+		props[propArgs[i]] = propArgs[i+1]
 	}
 
-	toggleRule := ToggleRule{FeatureId:featureId, Properties:props, Enabled:enabled}
+	toggleRule := ToggleRule{FeatureId: featureId, Properties: props, Enabled: enabled}
 	return &toggleRule
 }

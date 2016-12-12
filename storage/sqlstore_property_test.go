@@ -1,15 +1,17 @@
 package storage
 
 import (
-	"testing"
 	"fmt"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/assert"
 	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFeatureToggleStoreImpl_CreateProperty(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -18,13 +20,14 @@ func TestFeatureToggleStoreImpl_CreateProperty(t *testing.T) {
 	defer fs.Close()
 
 	property := NewProperty(randomSufix("Prop-"), "p description")
-	propertyName, err := fs.CreateProperty(*property);
+	propertyName, err := fs.CreateProperty(*property)
 
 	require.NotNil(t, propertyName, "Should get property name, %v", err)
 }
 
 func TestFeatureToggleStoreImpl_ReadProperty(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -33,7 +36,7 @@ func TestFeatureToggleStoreImpl_ReadProperty(t *testing.T) {
 	defer fs.Close()
 
 	property := NewProperty(randomSufix("Prop-"), "p description")
-	propertyName, err := fs.CreateProperty(*property);
+	propertyName, err := fs.CreateProperty(*property)
 
 	require.NotNil(t, propertyName, "Should get property name, %v", err)
 
@@ -45,6 +48,7 @@ func TestFeatureToggleStoreImpl_ReadProperty(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_ReadAllPropertyNames(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -54,13 +58,13 @@ func TestFeatureToggleStoreImpl_ReadAllPropertyNames(t *testing.T) {
 
 	propName1 := randomSufix("Prop-")
 	property := NewProperty(propName1, "p description")
-	propertyName, err := fs.CreateProperty(*property);
+	propertyName, err := fs.CreateProperty(*property)
 
 	require.NotNil(t, propertyName, "Should get property 1 name, %v", err)
 
 	propName2 := randomSufix("Prop-")
 	property = NewProperty(propName2, "p description")
-	propertyName, err = fs.CreateProperty(*property);
+	propertyName, err = fs.CreateProperty(*property)
 
 	require.NotNil(t, propertyName, "Should get property 2 name, %v", err)
 
@@ -81,6 +85,7 @@ func contains(ss *[]string, str string) bool {
 
 func TestFeatureToggleStoreImpl_DeleteProperty(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -89,7 +94,7 @@ func TestFeatureToggleStoreImpl_DeleteProperty(t *testing.T) {
 	defer fs.Close()
 
 	property := NewProperty(randomSufix("Name-"), "p description")
-	propertyName, err := fs.CreateProperty(*property);
+	propertyName, err := fs.CreateProperty(*property)
 
 	require.NotNil(t, propertyName, "Should get property name, %v", err)
 
@@ -97,5 +102,3 @@ func TestFeatureToggleStoreImpl_DeleteProperty(t *testing.T) {
 
 	require.True(t, *res, "Should get true from delete operation for property '%s', %v", propertyName, err)
 }
-
-

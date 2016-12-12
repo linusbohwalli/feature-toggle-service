@@ -1,16 +1,18 @@
 package storage
 
 import (
-	"testing"
 	"fmt"
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand"
-	"time"
 )
 
 func TestFeatureToggleStoreImpl_CreateToggleRule(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -19,14 +21,18 @@ func TestFeatureToggleStoreImpl_CreateToggleRule(t *testing.T) {
 	defer fs.Close()
 
 	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
 	prop1 := Property{randomSufix("prop-"), "p description 1"}
 	prop2 := Property{randomSufix("prop-"), "p description 2"}
 	prop3 := Property{randomSufix("prop-"), "p description 3"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop3); require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop3)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
 
 	id, err := fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, "val 1", prop2.Name, "val 2", prop3.Name, "val 3"))
 
@@ -35,22 +41,27 @@ func TestFeatureToggleStoreImpl_CreateToggleRule(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_DeleteToggleRule(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
-	if ( err != nil) {
+	if err != nil {
 		panic(fmt.Sprintf("Failed to open database, %v", err))
 	}
 	defer fs.Close()
 
 	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
 	prop1 := Property{randomSufix("prop-"), "p description 1"}
 	prop2 := Property{randomSufix("prop-"), "p description 2"}
 	prop3 := Property{randomSufix("prop-"), "p description 3"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop3); require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop3)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
 
 	// setup database
 	ruleId, err := fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, "val1", prop2.Name, "val2"))
@@ -64,37 +75,7 @@ func TestFeatureToggleStoreImpl_DeleteToggleRule(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_ReadToggleRule(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
-
-	err := fs.Open()
-	if ( err != nil) {
-		panic(fmt.Sprintf("Failed to open database, %v", err))
-	}
-	defer fs.Close()
-
-	val1 := "val1"
-	val2 := "val2"
-
-	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
-
-	prop1 := Property{randomSufix("prop-"), "p description 1"}
-	prop2 := Property{randomSufix("prop-"), "p description 2"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
-
-	// setup database
-	ruleId, err := fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, val1, prop2.Name, val2))
-
-	toggleRule, err := fs.ReadToggleRule(*ruleId)
-
-	require.Nil(t, err, "Should not get an error, %v", err)
-	require.NotNil(t, toggleRule, "Result shall contain a toggle rule")
-	assert.Equal(t, val1, toggleRule.Properties[prop1.Name], prop1.Name + " shall have value '" + val1 + "'")
-	assert.Equal(t, val2, toggleRule.Properties[prop2.Name], prop2.Name + " shall have value '" + val2 + "'")
-}
-
-func TestFeatureStore_SearchToggleRule(t *testing.T) {
-	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -106,12 +87,50 @@ func TestFeatureStore_SearchToggleRule(t *testing.T) {
 	val2 := "val2"
 
 	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
 	prop1 := Property{randomSufix("prop-"), "p description 1"}
 	prop2 := Property{randomSufix("prop-"), "p description 2"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+
+	// setup database
+	ruleId, err := fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, val1, prop2.Name, val2))
+
+	toggleRule, err := fs.ReadToggleRule(*ruleId)
+
+	require.Nil(t, err, "Should not get an error, %v", err)
+	require.NotNil(t, toggleRule, "Result shall contain a toggle rule")
+	assert.Equal(t, val1, toggleRule.Properties[prop1.Name], prop1.Name+" shall have value '"+val1+"'")
+	assert.Equal(t, val2, toggleRule.Properties[prop2.Name], prop2.Name+" shall have value '"+val2+"'")
+}
+
+func TestFeatureStore_SearchToggleRule(t *testing.T) {
+	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
+
+	err := fs.Open()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database, %v", err))
+	}
+	defer fs.Close()
+
+	val1 := "val1"
+	val2 := "val2"
+
+	feature := NewFeature(randomSufix("Name-"), true, "f description")
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
+
+	prop1 := Property{randomSufix("prop-"), "p description 1"}
+	prop2 := Property{randomSufix("prop-"), "p description 2"}
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
 
 	// setup database
 	fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, val1, prop2.Name, val2))
@@ -123,13 +142,14 @@ func TestFeatureStore_SearchToggleRule(t *testing.T) {
 
 	PrintFeatures(*toggleRules)
 	require.Equal(t, 1, len(*toggleRules), fmt.Sprintf("Result shall contain one toggle rule, %v", *toggleRules))
-	assert.Equal(t, val1, (*toggleRules)[0].Properties[prop1.Name], prop1.Name + " shall have value '" + val1 + "'")
-	assert.Equal(t, val2, (*toggleRules)[0].Properties[prop2.Name], prop2.Name + " shall have value '" + val2 + "'")
+	assert.Equal(t, val1, (*toggleRules)[0].Properties[prop1.Name], prop1.Name+" shall have value '"+val1+"'")
+	assert.Equal(t, val2, (*toggleRules)[0].Properties[prop2.Name], prop2.Name+" shall have value '"+val2+"'")
 
 }
 
 func TestFeatureStore_SearchToggleRule__no_name(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -141,12 +161,15 @@ func TestFeatureStore_SearchToggleRule__no_name(t *testing.T) {
 	val2 := "val2"
 
 	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
 	prop1 := Property{randomSufix("prop-"), "p description 1"}
 	prop2 := Property{randomSufix("prop-"), "p description 2"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
 
 	// setup database
 	fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, val1, prop2.Name, val2))
@@ -163,6 +186,7 @@ func TestFeatureStore_SearchToggleRule__no_name(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_GetEnabledToggleRules(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -174,12 +198,15 @@ func TestFeatureToggleStoreImpl_GetEnabledToggleRules(t *testing.T) {
 	val2 := "val2"
 
 	feature := NewFeature(randomSufix("Name-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature); require.NotNil(t, featureId, "Should get featureId, %v", err)
+	featureId, err := fs.CreateFeature(*feature)
+	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
 	prop1 := Property{randomSufix("prop-"), "p description 1"}
 	prop2 := Property{randomSufix("prop-"), "p description 2"}
-	p, err := fs.CreateProperty(prop1); require.NotNil(t, p, "Should get propertyName, %v", err)
-	p, err = fs.CreateProperty(prop2); require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err := fs.CreateProperty(prop1)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
+	p, err = fs.CreateProperty(prop2)
+	require.NotNil(t, p, "Should get propertyName, %v", err)
 
 	// setup database
 	fs.CreateToggleRule(*NewToggleRule(*featureId, true, prop1.Name, val1, prop2.Name, val2))

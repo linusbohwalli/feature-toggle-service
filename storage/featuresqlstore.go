@@ -8,7 +8,8 @@ import (
 )
 
 type FeatureToggleStoreImpl struct {
-	db *sql.DB
+	db     *sql.DB
+	config *Config
 }
 
 func NewFeatureToggleStoreImpl() *FeatureToggleStoreImpl {
@@ -16,7 +17,12 @@ func NewFeatureToggleStoreImpl() *FeatureToggleStoreImpl {
 }
 
 func (fs *FeatureToggleStoreImpl) Open() error {
-	config := GetConfig()
+	var config Config
+	if fs.config == nil {
+		config = GetConfig()
+	} else {
+		config = *fs.config
+	}
 	dbinfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		config.Database.HOST, config.Database.USER, config.Database.PASSWORD, config.Database.NAME, config.Database.PORT)
 	db, err := sql.Open("postgres", dbinfo)
@@ -24,6 +30,10 @@ func (fs *FeatureToggleStoreImpl) Open() error {
 		fs.db = db
 	}
 	return err
+}
+
+func (fs *FeatureToggleStoreImpl) SetConfig(config Config) {
+	fs.config = &config
 }
 
 func (fs *FeatureToggleStoreImpl) Close() {

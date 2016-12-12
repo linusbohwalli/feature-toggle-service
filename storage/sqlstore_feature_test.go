@@ -1,14 +1,19 @@
 package storage
 
 import (
-	"testing"
 	"fmt"
-	"github.com/stretchr/testify/require"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+var defaultDb = DataBase{USER: "postgres", PASSWORD: "ftftft", NAME: "postgres", HOST: "localhost", PORT: "5432"}
+var defaultConfig = Config{defaultDb}
 
 func TestFeatureToggleStoreImpl_CreateFeature(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -17,13 +22,14 @@ func TestFeatureToggleStoreImpl_CreateFeature(t *testing.T) {
 	defer fs.Close()
 
 	feature := NewFeature(randomSufix("Feature-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature);
+	featureId, err := fs.CreateFeature(*feature)
 
 	require.NotNil(t, featureId, "Should get featureId, %v", err)
 }
 
 func TestFeatureToggleStoreImpl_ReadFeature(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -32,7 +38,7 @@ func TestFeatureToggleStoreImpl_ReadFeature(t *testing.T) {
 	defer fs.Close()
 
 	feature := NewFeature(randomSufix("Feature-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature);
+	featureId, err := fs.CreateFeature(*feature)
 
 	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
@@ -45,6 +51,7 @@ func TestFeatureToggleStoreImpl_ReadFeature(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_ReadFeatureByName(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -54,7 +61,7 @@ func TestFeatureToggleStoreImpl_ReadFeatureByName(t *testing.T) {
 
 	featureName := randomSufix("Feature-")
 	feature := NewFeature(featureName, true, "f description")
-	featureId, err := fs.CreateFeature(*feature);
+	featureId, err := fs.CreateFeature(*feature)
 
 	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
@@ -67,6 +74,7 @@ func TestFeatureToggleStoreImpl_ReadFeatureByName(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_ReadFeatureByName__unknown(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -81,6 +89,7 @@ func TestFeatureToggleStoreImpl_ReadFeatureByName__unknown(t *testing.T) {
 
 func TestFeatureToggleStoreImpl_DeleteFeature(t *testing.T) {
 	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
 
 	err := fs.Open()
 	if err != nil {
@@ -89,13 +98,11 @@ func TestFeatureToggleStoreImpl_DeleteFeature(t *testing.T) {
 	defer fs.Close()
 
 	feature := NewFeature(randomSufix("Feature-"), true, "f description")
-	featureId, err := fs.CreateFeature(*feature);
+	featureId, err := fs.CreateFeature(*feature)
 
 	require.NotNil(t, featureId, "Should get featureId, %v", err)
 
-	res,err := fs.DeleteFeature(*featureId)
+	res, err := fs.DeleteFeature(*featureId)
 
 	require.True(t, *res, "Should get true from delete operation for featureId %s, %v", featureId, err)
 }
-
-
