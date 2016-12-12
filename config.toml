@@ -1,0 +1,7 @@
+## Example DB config:
+# [Database]
+#     USER = "postgres"
+#     PASSWORD = "ftftft"
+#     NAME = "postgres"
+#     HOST = "localhost"
+#     PORT = "5432"
