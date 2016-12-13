@@ -106,3 +106,27 @@ func TestFeatureToggleStoreImpl_DeleteFeature(t *testing.T) {
 
 	require.True(t, *res, "Should get true from delete operation for featureId %s, %v", featureId, err)
 }
+
+func TestFeatureToggleStoreImpl_SearchFeature(t *testing.T) {
+	var fs FeatureToggleStore = NewFeatureToggleStoreImpl()
+	fs.SetConfig(defaultConfig)
+
+	err := fs.Open()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database, %v", err))
+	}
+	defer fs.Close()
+
+	featureName := randomSufix("Feature-")
+	feature := NewFeature(featureName, true, "Fake description")
+	_, err = fs.CreateFeature(*feature)
+
+	if err != nil {
+		t.Fail()
+	}
+
+	res, err := fs.SearchFeature(featureName)
+
+	require.Equal(t, 1, len(*res), "Should receive exactly ONE feature back, got %v, %v", *res, err)
+	require.Equal(t, featureName, (*res)[0].Name, "Names should match for feature with name %s, %v", featureName, err)
+}

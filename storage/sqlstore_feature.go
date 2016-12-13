@@ -91,7 +91,23 @@ func (fs *FeatureToggleStoreImpl) DeleteFeature(id string) (*bool, error) {
 }
 
 func (fs *FeatureToggleStoreImpl) SearchFeature(name string) (*([]Feature), error) {
-	return nil, errors.New("Not implemented")
+	stmt, err := fs.db.Prepare(READ_FEATURE_BY_NAME_SQL)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("SearchFeature: Failed to create prepared statement, %v", err))
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(name)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("SearchFeature: Failed to search for feature with name %v - Error: %v", name, err))
+	}
+
+	features, err := rowsToFeature(rows)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("SearchFeature: Failed to convert rows to features: %v", err))
+	}
+
+	return &features, nil
 }
 
 func rowsToFeature(rows *sql.Rows) ([]Feature, error) {

@@ -9,6 +9,8 @@ import (
 	"github.com/peterrosell/feature-toggle-service/storage"
 	"github.com/pkg/errors"
 	"github.com/peterrosell/feature-toggle-service/featuretree"
+	"log"
+	"github.com/peterrosell/feature-toggle-service/api"
 )
 
 type FeatureToggleServiceServer struct {
@@ -121,22 +123,35 @@ func (s *FeatureToggleServiceServer) DeleteFeature(ctx context.Context, req *api
 	return new(api.DeleteFeatureResponse), nil
 }
 
-func (s *FeatureToggleServiceServer) SearchFeature(ctx context.Context, req *api.SearchFeatureRequest) (*api.SearchFeatureResponse, error) {
-	/*
-	if( req.Filter != nil) {
-		fmt.Printf("SearchFeature: %s\n", req.Filter.Name)
-	} else {
-		fmt.Printf("SearchFeature filter=nil: %v\n", req)
+func storeFeatureToResponseFeature(storeFeature storage.Feature) (*feature_toggle_api.Feature) {
+	return &feature_toggle_api.Feature {
+		Name: storeFeature.Name,
+		Id: storeFeature.Id,
+		Description: storeFeature.Description,
+		Enabled: storeFeature.Enabled }
+}
+
+func storeFeaturesToResponseFeatures(storeFeatures *[]storage.Feature) ([]*feature_toggle_api.Feature) {
+	var responseFeatures []*feature_toggle_api.Feature
+	for _, f := range *storeFeatures {
+		responseFeature := storeFeatureToResponseFeature(f)
+		responseFeatures = append(responseFeatures, responseFeature)
 	}
-	*/
+	return responseFeatures
+}
+
+func (s *FeatureToggleServiceServer) SearchFeature(ctx context.Context, req *api.SearchFeatureRequest) (*api.SearchFeatureResponse, error) {
 	fmt.Printf("SearchFeature name=: %v\n", req.Name)
-	feature := new(api.Feature)
-	feature.Name = "Smörrebröd"
+	var features, err = s.fs.SearchFeature(req.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	response := new(api.SearchFeatureResponse)
-	response.Features = []*api.Feature{feature}
+	responseFeatures := storeFeaturesToResponseFeatures(features)
 
-	return response, nil
+	response := api.SearchFeatureResponse{Features: responseFeatures}
+
+	return &response, nil
 }
 
 func (s *FeatureToggleServiceServer) CreateProperty(ctx context.Context, req *api.CreatePropertyRequest) (*api.CreatePropertyResponse, error) {
