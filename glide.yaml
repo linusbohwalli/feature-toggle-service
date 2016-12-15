@@ -1,2 +1,3 @@
 package: github.com/peterrosell/feature-toggle-service
-import: []
+import:
+- package: github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis/google/api

@@ -1,6 +1,8 @@
-hash: 8e18e64076fe582de81e5aea63fe8bf6ab34a5f3bce4925201df530462a30d63
-updated: 2016-11-13T21:39:32.827741275+01:00
+hash: 3e5aa6d1ec95edde2b1b9b1302a4bfaf122e44dee8d54c3d1c2f10a9dfb53157
+updated: 2016-12-15T12:24:55.610007026+01:00
 imports:
+- name: github.com/BurntSushi/toml
+  version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/golang/glog
   version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/protobuf
