@@ -2,7 +2,7 @@ package storage
 
 import (
 	"database/sql"
-	"github.com/peterrosell/feature-toggle-service/featuretree"
+	"github.com/linusbohwalli/feature-toggle-service/featuretree"
 	"fmt"
 	"time"
 	"strings"

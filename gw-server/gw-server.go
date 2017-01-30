@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	api "github.com/peterrosell/feature-toggle-service/api"
+	api "github.com/linusbohwalli/feature-toggle-service/api"
 )
 
 var (

@@ -3,26 +3,26 @@ package feature_toggle_impl
 import (
 	"fmt"
 
-	api "github.com/peterrosell/feature-toggle-service/api"
+	api "github.com/linusbohwalli/feature-toggle-service/api"
+	"github.com/linusbohwalli/feature-toggle-service/featuretree"
+	"github.com/linusbohwalli/feature-toggle-service/storage"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"github.com/peterrosell/feature-toggle-service/storage"
-	"github.com/pkg/errors"
-	"github.com/peterrosell/feature-toggle-service/featuretree"
 	"log"
-	"github.com/peterrosell/feature-toggle-service/api"
 )
 
 type FeatureToggleServiceServer struct {
-	fs storage.FeatureToggleStore
+	fs   storage.FeatureToggleStore
 	tree *featuretree.ToggleRuleTree
 }
-func (s *FeatureToggleServiceServer) GetFeaturesForProperties(ctx context.Context, req *api.GetFeaturesByPropertiesRequest) (*api.GetFeaturesByPropertiesResponse, error){
+
+func (s *FeatureToggleServiceServer) GetFeaturesForProperties(ctx context.Context, req *api.GetFeaturesByPropertiesRequest) (*api.GetFeaturesByPropertiesResponse, error) {
 	if s.tree == nil {
 		return nil, errors.New("Feature toggle service not initialized.")
 	}
 	fmt.Printf("getfeat: %v\n", req)
-	return &api.GetFeaturesByPropertiesResponse{Features:s.tree.FindFeatures(req.Properties)}, nil
+	return &api.GetFeaturesByPropertiesResponse{Features: s.tree.FindFeatures(req.Properties)}, nil
 }
 
 func (s *FeatureToggleServiceServer) CreateToggleRule(ctx context.Context, req *api.CreateToggleRuleRequest) (*api.CreateToggleRuleResponse, error) {
@@ -30,11 +30,11 @@ func (s *FeatureToggleServiceServer) CreateToggleRule(ctx context.Context, req *
 
 	feature, err := s.fs.ReadFeatureByName(req.ToggleRule.Name)
 	if feature == nil {
-		return nil, errors.New( "Unknown feature")
+		return nil, errors.New("Unknown feature")
 	}
 
 	propAsSlice := []string{}
-	for k,v := range req.ToggleRule.Properties {
+	for k, v := range req.ToggleRule.Properties {
 		propAsSlice = append(propAsSlice, k, v)
 	}
 
@@ -80,6 +80,7 @@ func (s *FeatureToggleServiceServer) SearchToggleRule(ctx context.Context, req *
 
 	return response, nil
 }
+
 /*
 func ToApiToggleRules(rules *[]storage.ToggleRule) []api.ToggleRule{
 	toggleRules := make([]api.ToggleRule, len(rules))
@@ -87,7 +88,6 @@ func ToApiToggleRules(rules *[]storage.ToggleRule) []api.ToggleRule{
 		toggleRules[i] = ToApiToggleRule( rules[0])
 	}
 }
-
 func ToApiToggleRule(rule storage.ToggleRule) api.ToggleRule {
 	return api.ToggleRule{Id:rule.Id,Name:rule.FeatureId}
 }
@@ -123,16 +123,16 @@ func (s *FeatureToggleServiceServer) DeleteFeature(ctx context.Context, req *api
 	return new(api.DeleteFeatureResponse), nil
 }
 
-func storeFeatureToResponseFeature(storeFeature storage.Feature) (*feature_toggle_api.Feature) {
-	return &feature_toggle_api.Feature {
-		Name: storeFeature.Name,
-		Id: storeFeature.Id,
+func storeFeatureToResponseFeature(storeFeature storage.Feature) *api.Feature {
+	return &api.Feature{
+		Name:        storeFeature.Name,
+		Id:          storeFeature.Id,
 		Description: storeFeature.Description,
-		Enabled: storeFeature.Enabled }
+		Enabled:     storeFeature.Enabled}
 }
 
-func storeFeaturesToResponseFeatures(storeFeatures *[]storage.Feature) ([]*feature_toggle_api.Feature) {
-	var responseFeatures []*feature_toggle_api.Feature
+func storeFeaturesToResponseFeatures(storeFeatures *[]storage.Feature) []*api.Feature {
+	var responseFeatures []*api.Feature
 	for _, f := range *storeFeatures {
 		responseFeature := storeFeatureToResponseFeature(f)
 		responseFeatures = append(responseFeatures, responseFeature)
@@ -202,8 +202,8 @@ func newFeatureToggleServiceServer() *FeatureToggleServiceServer {
 	s.fs.Open()
 
 	toggleRules, err := s.fs.GetEnabledToggleRules()
-	if( toggleRules != nil) {
-		propertyNames, err := s.fs.ReadAllPropertyNames();
+	if toggleRules != nil {
+		propertyNames, err := s.fs.ReadAllPropertyNames()
 		if err != nil {
 			fmt.Printf("Failed to read all properties, %v\n", err)
 			panic(err.Error())

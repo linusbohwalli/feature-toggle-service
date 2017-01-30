@@ -21,7 +21,7 @@ type Config struct {
 }
 
 func GetConfig() Config {
-	filename := flag.String("config", "./config.toml", "Name of the config file")
+	filename := flag.String("config", "../config.toml", "Name of the config file")
 	_, err := os.Stat(*filename)
 	if err != nil {
 		log.Fatal("Config file is missing: ", filename)

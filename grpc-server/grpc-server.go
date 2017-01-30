@@ -4,7 +4,7 @@ import (
 	"net"
 	"github.com/golang/glog"
 
-	api "github.com/peterrosell/feature-toggle-service/api-impl"
+	api "github.com/linusbohwalli/feature-toggle-service/api-impl"
 	"google.golang.org/grpc"
 )
 

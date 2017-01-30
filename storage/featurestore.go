@@ -3,7 +3,7 @@ package storage
 import (
 	"time"
 
-	"github.com/peterrosell/feature-toggle-service/featuretree"
+	"github.com/linusbohwalli/feature-toggle-service/featuretree"
 	"github.com/satori/go.uuid"
 )
 
