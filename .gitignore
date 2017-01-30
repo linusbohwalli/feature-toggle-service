@@ -30,3 +30,4 @@ _testmain.go
 api/*.go
 api/*.swagger.json
 .vscode
+.DS_Store
