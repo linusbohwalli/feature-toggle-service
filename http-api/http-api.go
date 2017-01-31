@@ -13,10 +13,14 @@ func (h *Handler) handleGetFeaturesForProperties(w http.ResponseWriter, r *http.
 
 	var req api.GetFeaturesByPropertiesRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		err := errors.New("Invalid JSON")
-		Error(w, http.StatusBadRequest, err, h.Logger)
-		return
+	props := make(map[string][]string)
+	props = r.URL.Query()
+
+	req.Properties = make(map[string]string)
+	for k, vs := range props {
+		for _, v := range vs {
+			req.Properties[k] = v
+		}
 	}
 
 	if err := h.Client.Open(); err != nil {
@@ -111,11 +115,7 @@ func (h *Handler) handleDeleteToggleRule(w http.ResponseWriter, r *http.Request,
 func (h *Handler) handleSearchToggleRule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var req api.SearchToggleRuleRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		err := errors.New("Invalid JSON")
-		Error(w, http.StatusBadRequest, err, h.Logger)
-		return
-	}
+	req.Name = r.URL.Query().Get("name")
 
 	if err := h.Client.Open(); err != nil {
 		err := errors.New("Failed to initialize connection to server")
@@ -207,11 +207,7 @@ func (h *Handler) handleDeleteFeature(w http.ResponseWriter, r *http.Request, ps
 func (h *Handler) handleSearchFeature(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var req api.SearchFeatureRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		err := errors.New("Invalid JSON")
-		Error(w, http.StatusBadRequest, err, h.Logger)
-		return
-	}
+	req.Name = r.URL.Query().Get("name")
 
 	if err := h.Client.Open(); err != nil {
 		err := errors.New("Failed to initialize connection to server")
@@ -303,11 +299,7 @@ func (h *Handler) handleDeleteProperty(w http.ResponseWriter, r *http.Request, p
 func (h *Handler) handleSearchProperty(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var req api.SearchPropertyRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		err := errors.New("Invalid JSON")
-		Error(w, http.StatusBadRequest, err, h.Logger)
-		return
-	}
+	req.Name = r.URL.Query().Get("name")
 
 	if err := h.Client.Open(); err != nil {
 		err := errors.New("Failed to initialize connection to server")
