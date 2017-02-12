@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"log"
 )
 
 type FeatureToggleServiceServer struct {
@@ -51,17 +50,37 @@ func (s *FeatureToggleServiceServer) CreateToggleRule(ctx context.Context, req *
 func (s *FeatureToggleServiceServer) ReadToggleRule(ctx context.Context, req *api.ReadToggleRuleRequest) (*api.ReadToggleRuleResponse, error) {
 	fmt.Printf("ReadToggleRule: id=%s\n", req.Id)
 
-	toggleRule := new(api.ToggleRule)
-	toggleRule.Id = req.Id
-	toggleRule.Name = "extra speed"
+	storeToggleRule, err := s.fs.ReadToggleRule(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if storeToggleRule == nil {
+		return nil, errors.New("Unable to find toggle rule")
+	}
+
+	toggleRule := storeToggleRuleToResponseToggleRule(storeToggleRule)
 	response := new(api.ReadToggleRuleResponse)
 	response.ToggleRule = toggleRule
 
 	return response, nil
 }
 
+func storeToggleRuleToResponseToggleRule(store *storage.ToggleRule) *api.ToggleRule {
+	return &api.ToggleRule{
+		Id:         store.Id,
+		Enabled:    store.Enabled,
+		Properties: store.Properties,
+	}
+}
+
 func (s *FeatureToggleServiceServer) DeleteToggleRule(ctx context.Context, req *api.DeleteToggleRuleRequest) (*api.DeleteToggleRuleResponse, error) {
 	fmt.Printf("DeleteToggleRule: id=%s\n", req.Id)
+
+	if _, err := s.fs.DeleteToggleRule(req.Id); err != nil {
+		return nil, err
+	}
+
 	return new(api.DeleteToggleRuleResponse), nil
 }
 
@@ -101,6 +120,7 @@ func (s *FeatureToggleServiceServer) CreateFeature(ctx context.Context, req *api
 	if err != nil {
 		return nil, err
 	}
+
 	response := new(api.CreateFeatureResponse)
 	response.Id = *featureId
 
@@ -110,8 +130,17 @@ func (s *FeatureToggleServiceServer) CreateFeature(ctx context.Context, req *api
 func (s *FeatureToggleServiceServer) ReadFeature(ctx context.Context, req *api.ReadFeatureRequest) (*api.ReadFeatureResponse, error) {
 	fmt.Printf("ReadFeature: id=%s\n", req.Id)
 
-	feature := new(api.Feature)
-	feature.Id = req.Id
+	storeFeature, err := s.fs.ReadFeature(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if storeFeature == nil {
+		return nil, errors.New("No such feature exists")
+	}
+
+	feature := storeFeatureToResponseFeature(*storeFeature)
+
 	response := new(api.ReadFeatureResponse)
 	response.Feature = feature
 
@@ -120,6 +149,12 @@ func (s *FeatureToggleServiceServer) ReadFeature(ctx context.Context, req *api.R
 
 func (s *FeatureToggleServiceServer) DeleteFeature(ctx context.Context, req *api.DeleteFeatureRequest) (*api.DeleteFeatureResponse, error) {
 	fmt.Printf("DeleteFeature: id=%s\n", req.Id)
+
+	_, err := s.fs.DeleteFeature(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	return new(api.DeleteFeatureResponse), nil
 }
 
@@ -142,9 +177,10 @@ func storeFeaturesToResponseFeatures(storeFeatures *[]storage.Feature) []*api.Fe
 
 func (s *FeatureToggleServiceServer) SearchFeature(ctx context.Context, req *api.SearchFeatureRequest) (*api.SearchFeatureResponse, error) {
 	fmt.Printf("SearchFeature name=: %v\n", req.Name)
-	var features, err = s.fs.SearchFeature(req.Name)
+
+	features, err := s.fs.SearchFeature(req.Name)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	responseFeatures := storeFeaturesToResponseFeatures(features)
@@ -156,7 +192,6 @@ func (s *FeatureToggleServiceServer) SearchFeature(ctx context.Context, req *api
 
 func (s *FeatureToggleServiceServer) CreateProperty(ctx context.Context, req *api.CreatePropertyRequest) (*api.CreatePropertyResponse, error) {
 	fmt.Printf("CreateProperty: %v\n", req.Property)
-	fmt.Printf("CreateProperty: id=%s\n", req.Property.Name)
 
 	propertyId, err := s.fs.CreateProperty(*storage.NewProperty(req.Property.Name, req.Property.Description))
 	if err != nil {
@@ -172,26 +207,40 @@ func (s *FeatureToggleServiceServer) CreateProperty(ctx context.Context, req *ap
 func (s *FeatureToggleServiceServer) ReadProperty(ctx context.Context, req *api.ReadPropertyRequest) (*api.ReadPropertyResponse, error) {
 	fmt.Printf("ReadProperty: id=%s\n", req.Name)
 
-	property := new(api.Property)
-	property.Name = req.Name
-	response := new(api.ReadPropertyResponse)
-	response.Property = property
+	property, err := s.fs.ReadProperty(req.Name)
+	if err != nil {
+		return nil, err
+	}
 
-	return response, nil
+	return &api.ReadPropertyResponse{&api.Property{Name: property.Name, Description: property.Description}}, nil
 }
 
 func (s *FeatureToggleServiceServer) DeleteProperty(ctx context.Context, req *api.DeletePropertyRequest) (*api.DeletePropertyResponse, error) {
+
+	_, err := s.fs.DeleteProperty(req.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	fmt.Printf("DeleteProperty: id=%s\n", req.Name)
 	return new(api.DeletePropertyResponse), nil
 }
 
 func (s *FeatureToggleServiceServer) SearchProperty(ctx context.Context, req *api.SearchPropertyRequest) (*api.SearchPropertyResponse, error) {
-	fmt.Printf("SearchFeature: %s\n", req.Name)
-	property := new(api.Property)
-	property.Name = "usertype"
+	fmt.Printf("SearchProperty: %s\n", req.Name)
+
+	props, err := s.fs.SearchProperty(req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp []*api.Property
+	for _, v := range *props {
+		resp = append(resp, &api.Property{Name: v.Name, Description: v.Description})
+	}
 
 	response := new(api.SearchPropertyResponse)
-	response.Properties = []*api.Property{property}
+	response.Properties = resp
 
 	return response, nil
 }
