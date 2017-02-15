@@ -27,6 +27,14 @@ func (s *FeatureToggleServiceServer) GetFeaturesForProperties(ctx context.Contex
 func (s *FeatureToggleServiceServer) CreateToggleRule(ctx context.Context, req *api.CreateToggleRuleRequest) (*api.CreateToggleRuleResponse, error) {
 	fmt.Printf("CreateToggleRule: %v\n", req.ToggleRule)
 
+	if req.ToggleRule == nil {
+		return nil, errors.New("No Toggle Rule received")
+	}
+
+	if req.ToggleRule.Properties == nil {
+		return nil, errors.New("No properties received for Toggle Rule")
+	}
+
 	feature, err := s.fs.ReadFeatureByName(req.ToggleRule.Name)
 	if feature == nil {
 		return nil, errors.New("Unknown feature")
@@ -36,6 +44,7 @@ func (s *FeatureToggleServiceServer) CreateToggleRule(ctx context.Context, req *
 	for k, v := range req.ToggleRule.Properties {
 		propAsSlice = append(propAsSlice, k, v)
 	}
+
 
 	ruleId, err := s.fs.CreateToggleRule(*storage.NewToggleRule((*feature).Id, req.ToggleRule.Enabled, propAsSlice...))
 	if err != nil {
@@ -86,13 +95,15 @@ func (s *FeatureToggleServiceServer) DeleteToggleRule(ctx context.Context, req *
 
 func (s *FeatureToggleServiceServer) SearchToggleRule(ctx context.Context, req *api.SearchToggleRuleRequest) (*api.SearchToggleRuleResponse, error) {
 	fmt.Printf("SearchToggleRule: %s\n", req)
-	toggleRule := new(api.ToggleRule)
-	toggleRule.Name = "Smörrebröd"
 
-	//_, err := s.fs.SearchToggleRule(req.Name, make(Filter))
-	//if err != nil {
-	//	return nil, errors.New( "failed to search for rules")
-	//}
+	//var Filter map[string]string
+	//Filter = make(map[string]string)
+	//Filter[] =
+
+	/*_, err := s.fs.SearchToggleRule(&req.Name, Filter)
+	if err != nil {
+		return nil, errors.New( "failed to search for rules")
+	}*/
 
 	response := new(api.SearchToggleRuleResponse)
 	//response.ToggleRules = []*api.ToggleRule{ToApiToggleRules(rules)}
@@ -210,6 +221,10 @@ func (s *FeatureToggleServiceServer) ReadProperty(ctx context.Context, req *api.
 	property, err := s.fs.ReadProperty(req.Name)
 	if err != nil {
 		return nil, err
+	}
+
+	if property == nil {
+		return nil, errors.New("No such property exists")
 	}
 
 	return &api.ReadPropertyResponse{&api.Property{Name: property.Name, Description: property.Description}}, nil

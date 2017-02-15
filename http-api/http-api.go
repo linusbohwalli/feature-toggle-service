@@ -41,8 +41,30 @@ func (h *Handler) handleGetFeaturesForProperties(w http.ResponseWriter, r *http.
 
 }
 
+type createToggleRule struct {
+	ToggleRule *toggleRule `json:"toggleRule,omitempty"`
+}
+
+type toggleRule struct {
+	Id         string         `json:"id,omitempty"`
+	Name       string         `json:"name,omitempty"`
+	Enabled    bool           `json:"enabled,omitempty"`
+	Properties []api.Property `json:"properties,omitempty"`
+}
+
+func httpToggleRuleToApiCreateToggleRuleRequest(ctr *createToggleRule) *api.CreateToggleRuleRequest {
+	var m map[string]string
+	m = make(map[string]string)
+
+	for _, prop := range ctr.ToggleRule.Properties {
+		m[prop.Name] = prop.Description
+	}
+
+	return &api.CreateToggleRuleRequest{&api.ToggleRule{Id: ctr.ToggleRule.Id, Name: ctr.ToggleRule.Name, Enabled: ctr.ToggleRule.Enabled, Properties: m}}
+}
+
 func (h *Handler) handleCreateToggleRule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var req api.CreateToggleRuleRequest
+	var req createToggleRule
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		err := errors.New("Invalid JSON")
@@ -58,7 +80,7 @@ func (h *Handler) handleCreateToggleRule(w http.ResponseWriter, r *http.Request,
 
 	defer h.Client.Close()
 
-	resp, err := h.Client.CreateToggleRule(&req)
+	resp, err := h.Client.CreateToggleRule(httpToggleRuleToApiCreateToggleRuleRequest(&req))
 	if err != nil {
 		err := errors.New("Failed to create toggle rule")
 		Error(w, http.StatusInternalServerError, err, h.Logger)
@@ -223,7 +245,7 @@ func (h *Handler) handleSearchFeature(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	createJSONandSendResponse(w, resp.Features, h.Logger)
+	createJSONandSendResponse(w, resp, h.Logger)
 }
 
 func (h *Handler) handleCreateProperty(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
